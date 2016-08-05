@@ -248,13 +248,13 @@ class BlogFront(BlogHandler):
         commautor = self.request.get('commautor')
         editcomm = self.request.get('editcomm')
         textcomm = self.request.get('textcomm')
+        editdone = self.request.get('editdone')
         checkererror = True;
 
         if username == p.author:
             like = self.request.get('like')
             delete = self.request.get('delete')
             edit = self.request.get('edit')
-            editdone = self.request.get('editdone')
 
             if delete == "delete":
                 db.delete(p)
@@ -264,6 +264,7 @@ class BlogFront(BlogHandler):
                 sub = p.subject
                 cont = p.content
                 pos = p
+                checkererror = False;
                 self.render("editpost.html", p = pos, subject=sub, content=cont)
 
             if editdone == "editdone":
