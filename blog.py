@@ -390,6 +390,13 @@ class BlogFront(BlogHandler):
                         comment.textcomment = textcomm
                         comment.put()
                         self.redirect('/blog/?')
+                    elif not comments:
+                        self.redirect('/blog/?')
+                elif not comments.get():
+                    self.redirect('/blog/?')
+
+        elif not username == commautor:
+            self.redirect('/blog/?')
 
 
 class PostPage(BlogHandler):
