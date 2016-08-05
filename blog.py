@@ -226,7 +226,6 @@ class Comments(db.Model):
     textcomment = db.TextProperty()
     created = db.DateTimeProperty(auto_now_add=True)
 
-
     @classmethod
     def by_idcomment(cls, idcomment):
         c = db.GqlQuery('SELECT * FROM Comments WHERE idcomment = :1', idcomment)
@@ -249,6 +248,7 @@ class BlogFront(BlogHandler):
         commautor = self.request.get('commautor')
         editcomm = self.request.get('editcomm')
         textcomm = self.request.get('textcomm')
+        checkererror = True;
 
         if username == p.author:
             like = self.request.get('like')
@@ -273,7 +273,11 @@ class BlogFront(BlogHandler):
                 self.redirect('/blog/?')
 
             if like == "like":
-                 self.redirect('/blog/?')
+                error = "NON puoi mettere like, sei autore"
+                posts = greetings = Post.all().order('-created')
+                comments = Comments.all()
+                self.render('front.html', posts=posts, error=error, comments=comments)
+                checkererror = False;
 
         else:
             like = self.request.get('like')
@@ -292,7 +296,11 @@ class BlogFront(BlogHandler):
                             self.redirect('/blog/?')
 
                         else:
-                            self.redirect('/blog/?')
+                            error = "non puoi mettere piu di un like"
+                            posts = greetings = Post.all().order('-created')
+                            comments = Comments.all()
+                            self.render('front.html', posts=posts, error=error, comments=comments)
+                            checkererror = False;
 
                     elif not votes:
                             vote = Votes(username=username, postid=idpost, votesid=username+idpost, likes=1)
@@ -309,21 +317,38 @@ class BlogFront(BlogHandler):
                     self.redirect('/blog/?')
 
             if delete == "delete":
-                self.redirect('/blog/?')
+                error = "NON sei autore post, non delete"
+                posts = greetings = Post.all().order('-created')
+                comments = Comments.all()
+                self.render('front.html', posts=posts, error=error, comments=comments)
+                checkererror = False;
 
             if edit == "edit":
-                self.redirect('/blog/?')
+                error = "NON sei autore post, non edit"
+                posts = greetings = Post.all().order('-created')
+                comments = Comments.all()
+                self.render('front.html', posts=posts, error=error, comments=comments)
+                checkererror = False;
 
         if comment:
             if p.author == self.user.name:
-                self.redirect('/blog/?')
+                error = "sei autore comment, NON puoi commentare"
+                posts = greetings = Post.all().order('-created')
+                comments = Comments.all()
+                self.render('front.html', posts=posts, error=error, comments=comments)
+                checkererror = False;
 
             else:
                 allcomments = Comments.all()
                 existcomment = Comments.by_idcomment(username+idpost).get()
 
                 if existcomment:
-                    self.redirect('/blog/?')
+                    error = "hai gia commentato"
+                    posts = greetings = Post.all().order('-created')
+                    comments = Comments.all()
+                    self.render('front.html', posts=posts, error=error, comments=comments)
+                    checkererror = False;
+
 
                 else:
                     comments = Comments(username=username, idpost=int(idpost), idcomment=username+idpost, textcomment=comment)
@@ -382,8 +407,11 @@ class BlogFront(BlogHandler):
                 elif not comments.get():
                     self.redirect('/blog/?')
 
-        elif not username == commautor:
-            self.redirect('/blog/?')
+        elif(username != commautor and checkererror):
+            error = "non sei autore del commento,NO EDIT NO DELETE"
+            posts = greetings = Post.all().order('-created')
+            comments = Comments.all()
+            self.render('front.html', posts=posts, error=error, comments=comments)
 
 
 class PostPage(BlogHandler):
