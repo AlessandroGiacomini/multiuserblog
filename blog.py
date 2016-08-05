@@ -12,10 +12,7 @@ from google.appengine.ext import db
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader('templates'),
                                autoescape = True)
 
-SECRET = '1'
-
-
-
+SECRET = '2144389555834132121234355589814413'
 
 #######################################################
 # Account and security users
@@ -174,7 +171,6 @@ class BlogHandler(webapp2.RequestHandler):
     def login(self, user):
         self.set_secure_cookie('user_id', str(user.key().id()))
 
-
     # Sets the cookie user id to nothing and Path=/
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
@@ -223,7 +219,6 @@ class Post(db.Model):
     def post_by_id(cls, uid):
         return Post.get_by_id(uid, parent = blog_key())
 
-
 class Comments(db.Model):
     username = db.StringProperty()
     idpost = db.IntegerProperty()
@@ -236,16 +231,6 @@ class Comments(db.Model):
     def by_idcomment(cls, idcomment):
         c = db.GqlQuery('SELECT * FROM Comments WHERE idcomment = :1', idcomment)
         return c
-
-
-
-
-
-
-
-
-
-
 
 class BlogFront(BlogHandler):
     def get(self):
@@ -323,7 +308,6 @@ class BlogFront(BlogHandler):
                     p.put()
                     self.redirect('/blog/?')
 
-
             if delete == "delete":
                 self.redirect('/blog/?')
 
@@ -337,6 +321,7 @@ class BlogFront(BlogHandler):
             else:
                 allcomments = Comments.all()
                 existcomment = Comments.by_idcomment(username+idpost).get()
+
                 if existcomment:
                     self.redirect('/blog/?')
 
@@ -346,11 +331,11 @@ class BlogFront(BlogHandler):
                     self.redirect('/blog/?')
 
         if username == commautor:
-
             editcommentdone = self.request.get('editcommentdone')
 
             if deletecomment == "deletecomment":
                 comments = Comments.all()
+
                 if comments.get():
                     comment = Comments.by_idcomment(username+idpost).get()
 
@@ -366,8 +351,10 @@ class BlogFront(BlogHandler):
 
             if editcomm == "editcomm":
                 comments = Comments.all()
+
                 if comments.get():
                     comment = Comments.by_idcomment(username+idpost).get()
+
                     if comment:
                         textcommdamod = comment.textcomment
                         postcomm = p
@@ -381,8 +368,8 @@ class BlogFront(BlogHandler):
 
             if editcommentdone == "editcommentdone":
                 self.write(textcomm)
-
                 comments = Comments.all()
+
                 if comments.get():
                     comment = Comments.by_idcomment(username+idpost).get()
                     if comment:
@@ -401,7 +388,6 @@ class BlogFront(BlogHandler):
 
 class PostPage(BlogHandler):
 
-
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
@@ -412,87 +398,8 @@ class PostPage(BlogHandler):
 
         self.render("permalink.html", post=post)
 
-    # Action inside post page
-    # def post(self, parametro):
-
-    #     idpost = self.request.get('idp')
-    #     key = db.Key.from_path('Post', int(idpost), parent=blog_key())
-    #     username = self.user.name
-    #     p = db.get(key)
-
-
-    #     if username == p.author:
-    #         like = self.request.get('like')
-    #         delete = self.request.get('delete')
-    #         edit = self.request.get('edit')
-    #         editdone = self.request.get('editdone')
-
-    #         if delete == "delete":
-    #             #
-    #             db.delete(p)
-    #             #tutti = Post.all().order('-created')
-    #             #self.render('front.html', posts = tutti)
-    #             self.redirect('/blog/%s' % idpost)
-
-    #         if edit == "edit":
-    #             sub = p.subject
-    #             cont = p.content
-    #             pos = p
-    #             self.render("editpost.html", p = pos, subject=sub, content=cont)
-
-    #         if editdone == "editdone":
-    #             p.subject = self.request.get('subject')
-    #             p.content = self.request.get('content')
-    #             p.put()
-    #             self.redirect('/blog/%s' % idpost)
-
-    #         if like == "like":
-    #              self.redirect('/blog/%s' % idpost)
-
-    #     else:
-    #         like = self.request.get('like')
-    #         delete = self.request.get('delete')
-    #         edit = self.request.get('edit')
-
-    #         if like == "like":
-    #             votes = Votes.all()
-    #             if votes.get():
-    #                 votes = Votes.by_votesid(username+idpost).get()
-
-    #                 if votes:
-    #                     if votes.likes==0:
-    #                         p.likes += 1
-    #                         p.put()
-    #                         self.redirect('/blog/%s' % idpost)
-
-    #                     else:
-    #                         self.redirect('/blog/%s' % idpost)
-
-    #                 elif not votes:
-    #                         vote = Votes(username=username, postid=idpost, votesid=username+idpost, likes=1)
-    #                         vote.put()
-    #                         p.likes += 1
-    #                         p.put()
-    #                         self.redirect('/blog/%s' % idpost)
-
-    #             elif not votes.get():
-    #                 vote = Votes(username=username, postid=idpost, votesid=username+idpost, likes=1)
-    #                 vote.put()
-    #                 p.likes += 1
-    #                 p.put()
-    #                 self.redirect('/blog/%s' % idpost)
-
-    #         if delete == "delete":
-    #             self.redirect('/blog/%s' % idpost)
-
-    #         if edit == "edit":
-    #             self.redirect('/blog/%s' % idpost)
-
-
-
 def votes_key(name='default'):
     return db.Key.from_path('votes', name)
-
 
 class Votes(db.Model):
     username = db.StringProperty()
@@ -500,12 +407,10 @@ class Votes(db.Model):
     votesid = db.StringProperty()
     likes = db.IntegerProperty(default = 0)
 
-
     @classmethod
     def by_votesid(cls, votesid):
         v = db.GqlQuery('SELECT * FROM Votes WHERE votesid = :1', votesid)
         return v
-
 
 class EditPost(BlogHandler):
     def get(self):
@@ -520,7 +425,6 @@ class EditComment(BlogHandler):
             self.render("editcomment.html")
         else:
             self.redirect("/login")
-
 
 class NewPost(BlogHandler):
     def get(self):
@@ -547,8 +451,6 @@ class NewPost(BlogHandler):
             error = "subject and content, please!"
             self.render("newpost.html", subject=subject, content=content, error=error)
 
-
-
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 def valid_username(username):
     return username and USER_RE.match(username)
@@ -566,8 +468,6 @@ class likes(object):
     def get(self):
         self.render("signup-form.html")
         self.arg = arg
-
-
 
 # Signup handler
 class Signup(BlogHandler):
@@ -698,8 +598,6 @@ class Welcome(BlogHandler):
             self.render('welcome.html', username = username)
         else:
             self.redirect('/unit2/signup')
-
-
 
 #######################################################
 # Rot13 Algorithm
