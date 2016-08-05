@@ -274,7 +274,7 @@ class BlogFront(BlogHandler):
                 self.redirect('/blog/?')
 
             if like == "like":
-                error = "NON puoi mettere like, sei autore"
+                error = "You are the author, you can't vote"
                 posts = greetings = Post.all().order('-created')
                 comments = Comments.all()
                 self.render('front.html', posts=posts, error=error, comments=comments)
@@ -297,7 +297,7 @@ class BlogFront(BlogHandler):
                             self.redirect('/blog/?')
 
                         else:
-                            error = "non puoi mettere piu di un like"
+                            error = "You can't put more than 1 like"
                             posts = greetings = Post.all().order('-created')
                             comments = Comments.all()
                             self.render('front.html', posts=posts, error=error, comments=comments)
@@ -318,14 +318,14 @@ class BlogFront(BlogHandler):
                     self.redirect('/blog/?')
 
             if delete == "delete":
-                error = "NON sei autore post, non delete"
+                error = "You are not the author, you can't delete it"
                 posts = greetings = Post.all().order('-created')
                 comments = Comments.all()
                 self.render('front.html', posts=posts, error=error, comments=comments)
                 checkererror = False;
 
             if edit == "edit":
-                error = "NON sei autore post, non edit"
+                error = "You are not the author, you can't edit it"
                 posts = greetings = Post.all().order('-created')
                 comments = Comments.all()
                 self.render('front.html', posts=posts, error=error, comments=comments)
@@ -333,7 +333,7 @@ class BlogFront(BlogHandler):
 
         if comment:
             if p.author == self.user.name:
-                error = "sei autore comment, NON puoi commentare"
+                error = "You are not the author, you can't comment it"
                 posts = greetings = Post.all().order('-created')
                 comments = Comments.all()
                 self.render('front.html', posts=posts, error=error, comments=comments)
@@ -344,7 +344,7 @@ class BlogFront(BlogHandler):
                 existcomment = Comments.by_idcomment(username+idpost).get()
 
                 if existcomment:
-                    error = "hai gia commentato"
+                    error = "You had already commented"
                     posts = greetings = Post.all().order('-created')
                     comments = Comments.all()
                     self.render('front.html', posts=posts, error=error, comments=comments)
@@ -409,7 +409,7 @@ class BlogFront(BlogHandler):
                     self.redirect('/blog/?')
 
         elif(username != commautor and checkererror):
-            error = "non sei autore del commento,NO EDIT NO DELETE"
+            error = "You are not the author, you can't delete or edit it"
             posts = greetings = Post.all().order('-created')
             comments = Comments.all()
             self.render('front.html', posts=posts, error=error, comments=comments)
