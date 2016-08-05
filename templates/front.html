@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  {% for p in posts %}
+
+	    {{ p.render() | safe }}
+	    <br>
+	    Comments:
+	    {% for comment in comments%}
+	            {% if comment.idpost == p.key().id()%}
+                <hr>
+                <strong>author: {{comment.username}}</strong>
+                <p>
+	            {{comment.textcomment}}
+	            <p>
+	            <form method="post">
+	            	{% set idp = p.key().id() %}
+       				<input type="hidden" name="idp" value="{{idp}}">
+					{% set commautor = comment.username %}
+       				<input type="hidden" name="commautor" value="{{commautor}}">
+	       			<input type="hidden" name="deletecomment" value="deletecomment">
+	       			<button type="submit">delete comment</button>
+   				</form>
+
+                <form method="post">
+                    {% set idp = p.key().id() %}
+                    <input type="hidden" name="idp" value="{{idp}}">
+                    {% set commautor = comment.username %}
+                    <input type="hidden" name="commautor" value="{{commautor}}">
+                    <input type="hidden" name="editcomm" value="editcomm">
+                    <button type="submit">edit</button>
+                </form>
+	          {% endif %}
+	    {% endfor %}
+
+        <p><p>
+        <hr>
+        <form method="post">
+			    <div>add a comment</div>
+			    <input type="text" name="comment" value="{{comment}}">
+                {% set idp = p.key().id() %}
+       			<input type="hidden" name="idp" value="{{idp}}">
+       			<button type="submit">add comment</button>
+        </form>
+
+    <br><br>
+    {% endfor %}
+
+
+
+{% endblock %}

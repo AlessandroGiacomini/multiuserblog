@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Edit comment</h2>
+
+    <form method="post">
+      <label>
+        <textarea name="textcomm">{{textcomm}}</textarea>
+      </label>
+
+      <div class="error">{{error}}</div>
+
+        {% set idp = p.key().id() %}
+        <input type="hidden" name="idp" value="{{idp}}">
+        {% set commautor = comment.username %}
+        <input type="hidden" name="commautor" value="{{commautor}}">
+        <input type="hidden" name="editcommentdone" value="editcommentdone">
+        <button type="submit">Save</button>
+
+    </form>
+
+{% endblock %}

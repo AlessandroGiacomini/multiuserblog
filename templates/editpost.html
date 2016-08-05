@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Edit post</h2>
+
+    <form method="post">
+
+      <label>
+        <div>subject</div>
+        <input type="text" name="subject" value="{{subject}}">
+      </label>
+
+      <label>
+        <div>blog</div>
+        <textarea name="content">{{content}}</textarea>
+      </label>
+     
+      <div class="error">{{error}}</div>
+
+
+        {% set idp = p.key().id() %}
+        <input type="hidden" name="idp" value="{{idp}}">
+        <input type="hidden" name="editdone" value="editdone">
+        <button type="submit">Save</button>
+
+    </form>
+
+{% endblock %}

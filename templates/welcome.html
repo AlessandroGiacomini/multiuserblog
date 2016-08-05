@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Unit 2 Signup</title>
+  </head>
+
+  <body>
+    <h2>Welcome, {{username}}!</h2>
+
+    <a href="/blog" class="main-title">
+    Blog
+    </a>
+
+    <div class="new-post">
+      <a class="new-post-link" href="/blog/newpost">New Post</a>
+    </div>
+
+    <div class="login-area">
+    {% if user %}
+      {{user.name}} (<a class="login-link" href="/logout">logout</a>)
+    {% endif %}
+  </div>
+  </body>
+</html>

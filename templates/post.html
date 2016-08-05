@@ -1,0 +1,47 @@
+<div class="post">
+  <div class="post-heading">
+
+    <!--
+    <div class="post-title">
+      {% set post_id = ["/blog/",p.key().id()]|join %}
+      <a class="post-link" href={{post_id}} >{{p.subject}}</a>
+    </div>
+    -->
+
+    <div class="post-title">
+    {{p.subject}}
+    </div>
+
+    <div class="post-date">
+      {{p.created.strftime("%b %d, %Y")}}
+    </div>
+  </div>
+
+  <div class="post-content">
+    {{p._render_text | safe}}
+  </div>
+
+  author: {{p.author}}
+  <form method="post">
+        {% set idp = p.key().id() %}
+        <input type="hidden" name="idp" value="{{idp}}">
+        <input type="hidden" name="like" value="like">
+        <button type="submit">Like {{p.likes}}</button>
+    </form>
+
+      <form method="post">
+         {% set idp = p.key().id() %}
+        <input type="hidden" name="idp" value="{{idp}}">
+        <input type="hidden" name="delete" value="delete">
+        <button type="submit">delete</button>
+    </form>
+
+
+     <form method="post">
+         {% set idp = p.key().id() %}
+        <input type="hidden" name="idp" value="{{idp}}">
+        <input type="hidden" name="edit" value="edit">
+        <button type="submit">edit</button>
+    </form>
+</div>
+
