@@ -231,6 +231,18 @@ class Comments(db.Model):
         c = db.GqlQuery('SELECT * FROM Comments WHERE idcomment = :1', idcomment)
         return c
 
+class BlogFrontLoggedOut(BlogHandler):
+    def get(self):
+        posts = greetings = Post.all().order('-created')
+        self.render('front.html', posts = posts)
+
+    def post(self):
+        error = "You are not logged"
+        posts = greetings = Post.all().order('-created')
+        comments = Comments.all()
+        self.render('login-form.html', error=error)
+
+
 class BlogFront(BlogHandler):
     def get(self):
         posts = greetings = Post.all().order('-created')
@@ -333,7 +345,7 @@ class BlogFront(BlogHandler):
 
         if comment:
             if p.author == self.user.name:
-                error = "You are not the author, you can't comment it"
+                error = "You are the author, you can't comment it"
                 posts = greetings = Post.all().order('-created')
                 comments = Comments.all()
                 self.render('front.html', posts=posts, error=error, comments=comments)
@@ -652,6 +664,7 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/unit2/signup', Unit2Signup),
                                ('/unit2/welcome', Welcome),
                                ('/blog/?', BlogFront),
+                               ('/blogout/?', BlogFrontLoggedOut),
                                ('/blog/([0-9]+)', PostPage),
                                ('/blog/newpost', NewPost),
                                ('/signup', Register),

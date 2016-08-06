@@ -15,8 +15,10 @@
       <a class="welcome-link" href="/unit3/welcome">{{user.name}} profile</a> | (<a class="login-link" href="/logout">logout</a>)
     {% else %}
       <a class="login-link" href="/login">login</a>
+      {% if user %}
       |
       <a class="login-link" href="/signup">signup</a>
+      {% endif %}
     {% endif %}
   </div>
 
