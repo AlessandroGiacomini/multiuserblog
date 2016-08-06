@@ -3,54 +3,86 @@
 <html>
   <head>
     <title>Login</title>
+    <link type="text/css" rel="stylesheet" href="/static/main.css" />
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <script type="text/javascript" src="/js/jquery-1.11.1.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
     <style type="text/css">
       .label {text-align: right}
       .error {color: red}
     </style>
   </head>
-
   <body>
-
-    <h2>Login</h2>
-    <div class="login-area">
-      <a class="login-link" href="/signup">signup</a>
-    </div>
-
     <form method="post">
-      <table>
-        <tr>
-          <td class="label">
-            Username
-          </td>
-          <td>
-            <input type="text" name="username" value="{{username}}">
-          </td>
-        </tr>
-
-        <tr>
-          <td class="label">
-            Password
-          </td>
-          <td>
-            <input type="password" name="password" value="">
-          </td>
-        </tr>
-      </table>
-
-      <div class="error">
-        {{error}}
-      </div>
-
-      <input type="submit">
-    </form>
-
-    <form action="/blogout/?">
-        <input type="submit" value="Blog" />
-    </form>
-
-    <div class="main-area">
-      <a href="/" class="main-title">back to main page</a>
+    <div class="container">
+           <div class="row">
+              <div class="col-md-12 text-left">
+                  <h1>Login</h1>
+              </div>
+            </div>
     </div>
+    <br><br>
+    <div class="container">
+          <div class="row">
+              <div class="col-md-4 text-left">
+                  <td class="label"><h4>Username</h4></td>
+                  <input type="text" name="username" size="10" value="{{username}}">
+              </div>
+          </div>
+    </div>
+    <br>
+    <div class="container">
+           <div class="row">
+             <div class="col-md-4 text-left">
+                 <td class="label"><h4>Password</h4></td>
+                 <input type="password" name="password" value="">
+             </div>
+          </div>
+    </div>
+     <div class="container">
+           <div class="row">
+             <div class="col-md-4 text-left">
+                 <div class="error">
+                   {{error}}
+                </div>
+             </div>
+           </div>
+     </div>
+    <br>
+    <div class="container">
+            <div class="row">
+              <div class="col-md-1 text-left">
+              <input type="submit">
+            </div>
+    </div>
+    </form>
+    <br>
+    <div class="container">
+           <div class="row">
+              <div class="col-md-1 text-left">
+                <form action="/signup">
+                     <input type="submit" value="Signup" />
+                </form>
+
+                <form action="/blogout/?">
+                    <input type="submit" value="Blog" />
+                </form>
+              </div>
+            </div>
+    </div>
+    <div class="container">
+           <div class="row">
+              <div class="col-md-12 text-left">
+                <form action="/">
+                    <input type="submit" value="back to main page" />
+                </form>
+              </div>
+            </div>
+      </div>
   </body>
 
 </html>

@@ -2,23 +2,36 @@
 
 <html>
   <head>
+    <link type="text/css" rel="stylesheet" href="/static/main.css" />
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <script type="text/javascript" src="/js/jquery-1.11.1.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
     <title>homepage</title>
   </head>
-
   <body>
-    <h2>Blog</h2>
-
-    <div class="login-area">
-      <a class="login-link" href="/login">login</a>
-    </div>
-
-    <div class="signup-area">
-      <a class="signup-link" href="/login">signup</a>
-    </div>
-
-    <form action="/blogout/?">
-        <input type="submit" value="Blog" />
-    </form>
-
+    <h1>Blog</h1>
+      <div class="container">
+           <div class="row">
+              <div class="col-md-4 text-center">
+                      <form action="/login">
+                          <input type="submit" value="login" />
+                      </form>
+              </div>
+              <div class="col-md-4 text-center">
+                      <form action="/signup">
+                          <input type="submit" value="signup" />
+                      </form>
+              </div>
+              <div class="col-md-4 text-center">
+                      <form action="/blogout/?">
+                          <input type="submit" value="Blog" />
+                      </form>
+              </div>
+          </div>
+      </div>
   </body>
 </html>

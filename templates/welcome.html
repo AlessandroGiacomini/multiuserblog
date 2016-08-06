@@ -2,24 +2,59 @@
 
 <html>
   <head>
-    <title>Unit 2 Signup</title>
+    <title>Welcome</title>
+    <link type="text/css" rel="stylesheet" href="/static/main.css" />
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <script type="text/javascript" src="/js/jquery-1.11.1.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
   </head>
 
   <body>
-    <h2>Welcome, {{username}}!</h2>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <h1>Welcome, {{username}}!</h1>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <form action="/blog">
+            <input type="submit" value="Blog" />
+          </form>
+        </div>
+      </div>
+    </div>
 
-    <a href="/blog" class="main-title">
-    Blog
-    </a>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <form action="/blog/newpost">
+            <input type="submit" value="New Post" />
+          </form>
+        </div>
+      </div>
+    </div>
 
-    <div class="new-post">
-      <a class="new-post-link" href="/blog/newpost">New Post</a>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <form action="/logout">
+            <input type="submit" value="logout" />
+          </form>
+        </div>
+      </div>
     </div>
 
     <div class="login-area">
-    {% if user %}
-      {{user.name}} (<a class="login-link" href="/logout">logout</a>)
-    {% endif %}
-  </div>
+        {% if user %}
+          {{user.name}} (<a class="login-link" href="/logout">logout</a>)
+        {% endif %}
+    </div>
   </body>
 </html>
