@@ -6,9 +6,16 @@
 </head>
 
 <body>
+  {% if user %}
   <a href="/blog" class="main-title">
     Blog
   </a>
+  {% else %}
+    <a href="/blogout/?" class="main-title">
+    Blog
+    </a>
+  {% endif %}
+
 
   <div class="login-area">
     {% if user %}

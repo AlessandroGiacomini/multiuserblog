@@ -234,7 +234,8 @@ class Comments(db.Model):
 class BlogFrontLoggedOut(BlogHandler):
     def get(self):
         posts = greetings = Post.all().order('-created')
-        self.render('front.html', posts = posts)
+        comments = db.GqlQuery('SELECT * FROM Comments ORDER BY created DESC')
+        self.render('front.html', posts = posts, comments=comments)
 
     def post(self):
         error = "You are not logged"
@@ -356,7 +357,7 @@ class BlogFront(BlogHandler):
                 existcomment = Comments.by_idcomment(username+idpost).get()
 
                 if existcomment:
-                    error = "You had already commented"
+                    error = "You have already commented"
                     posts = greetings = Post.all().order('-created')
                     comments = Comments.all()
                     self.render('front.html', posts=posts, error=error, comments=comments)
