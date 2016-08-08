@@ -281,10 +281,22 @@ class BlogFront(BlogHandler):
                 self.render("editpost.html", p = pos, subject=sub, content=cont)
 
             if editdone == "editdone":
-                p.subject = self.request.get('subject')
-                p.content = self.request.get('content')
-                p.put()
-                self.redirect('/blog/?')
+
+                s = self.request.get('subject')
+                c = self.request.get('content')
+
+                if c and s:
+                    p.subject = self.request.get('subject')
+                    p.content = self.request.get('content')
+                    p.put()
+                    self.redirect('/blog/?')
+                else:
+                    error = "Subject and content, please"
+                    posts = greetings = Post.all().order('-created')
+                    comments = Comments.all()
+                    self.render("editpost.html", p = p, subject=s, content=c, error=error)
+                    checkererror = False;
+
 
             if like == "like":
                 error = "You are the author, you can't vote"
@@ -406,16 +418,23 @@ class BlogFront(BlogHandler):
                     self.redirect('/blog/?')
 
             if editcommentdone == "editcommentdone":
-                self.write(textcomm)
+                #self.write(textcomm)
                 comments = Comments.all()
 
                 if comments.get():
                     comment = Comments.by_idcomment(username+idpost).get()
                     if comment:
-                        self.write(textcomm)
-                        comment.textcomment = textcomm
-                        comment.put()
-                        self.redirect('/blog/?')
+                        #self.write(textcomm)
+
+                        if textcomm:
+                            comment.textcomment = textcomm
+                            comment.put()
+                            self.redirect('/blog/?')
+                        else:
+                            error = "Subject and content, please"
+                            self.render("editcomment.html", p = p,  comment=comment, content=textcomm, error=error)
+                            checkererror = False;
+
                     elif not comments:
                         self.redirect('/blog/?')
                 elif not comments.get():
