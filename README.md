@@ -3,18 +3,25 @@
 -----------------------------------
 
 The goal of this project is to create a simple multi-user blog. 
-
 Users should be able to create an account with login/logout functionality, and create/edit/delete/like posts and comments.
 
+## How to Run Project
+------------------
 Checkout the [live](http://multiuserblogalessandro.appspot.com/) version of this project.
 
-## Required Libraries and Dependencies
------------------------------------
+* Install the [Google App Engine SDK for Python](https://cloud.google.com/appengine/downloads)
+* Sign up for a GAE account ([instructions](https://sites.google.com/site/gdevelopercodelabs/app-engine/creating-your-app-engine-account))
+* Clone the repo with ```git clone https://github.com/AlessandroGiacomini/multiuserblog.git```
+* ```cd FSND-Blog-P3``` into the blog directory
 
-- [Bootstrap](http://getbootstrap.com/)
-- [Google App Engine](https://cloud.google.com/appengine/docs)
+
+run the application through the GAE Launcher GUI
+- File -> Add Existing Application
+- Add project
+- Click Browse
 
 ### Project specifications
+-----------------------------------
 
 Blog must include the following features:
 - Front page that lists blog posts.
