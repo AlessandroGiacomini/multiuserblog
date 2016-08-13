@@ -238,7 +238,6 @@ class EditComment(BlogHandler):
             else:
                 self.redirect("/login")
 
-
     def post(self, par):
         if not self.user:
             self.redirect('/login')
@@ -278,6 +277,7 @@ class EditComment(BlogHandler):
                 elif not comments.get():
                     self.redirect('/blog/?')
 
+
 class EditPost(BlogHandler):
 
     def get(self, idpost):
@@ -294,19 +294,16 @@ class EditPost(BlogHandler):
             else:
                 self.redirect("/login")
 
-
     def post(self, par):
         if not self.user:
             self.redirect('/login')
 
         username = self.user.name
 
-
         idpost = self.request.get('idp')
         key = db.Key.from_path('Post', int(idpost), parent=blog_key())
         p = db.get(key)
         editdone = self.request.get('editdone')
-
 
         if username == p.author:
             edit = self.request.get('edit')
@@ -365,8 +362,6 @@ class DelComment(BlogHandler):
         else:
             self.redirect("/login")
 
-
-
     def post(self, par):
         if not self.user:
             self.redirect('/login')
@@ -409,7 +404,6 @@ class DelComment(BlogHandler):
                         comments=comments)
 
 
-
 class DelPost(BlogHandler):
 
     def get(self, idpost):
@@ -424,8 +418,6 @@ class DelPost(BlogHandler):
             self.render('deletepost.html', p=p)
         else:
             self.redirect("/login")
-
-
 
     def post(self, par):
         if not self.user:
@@ -482,7 +474,8 @@ class LikePost(BlogHandler):
 
         if likeyes == "likeyes":
             if username == p.author:
-                    error = "You are the author, you can't vote, Back to blog page!"
+                    error = "You are the author, you can't vote, "
+                    "Back to blog page!"
                     posts = greetings = Post.all().order('-created')
                     comments = Comments.all()
                     self.render('like.html',
@@ -499,14 +492,17 @@ class LikePost(BlogHandler):
                             self.redirect('/blog/?')
 
                         else:
-                            error = "You can't put more than 1 like, Back to blog page!"
+                            error = "You can't put more than 1 like, "
+                            "Back to blog page!"
                             posts = Post.all().order('-created')
                             comments = Comments.all()
                             self.render('like.html', error=error, p=p)
 
                     elif not votes:
-                            vote = Votes(username=username, postid=idpost,
-                                             votesid=username+idpost, likes=1)
+                            vote = Votes(username=username,
+                                         postid=idpost,
+                                         votesid=username+idpost,
+                                         likes=1)
                             vote.put()
                             p.likes += 1
                             p.put()
@@ -555,7 +551,8 @@ class CommPost(BlogHandler):
         if newcommentdone == "newcommentdone":
 
                 if p.author == self.user.name:
-                    error = "You are the author, you can't comment it, Back to blog page!"
+                    error = "You are the author, you can't comment it, "
+                    "Back to blog page!"
                     posts = greetings = Post.all().order('-created')
                     comments = Comments.all()
                     self.render('newcomment.html',
@@ -566,7 +563,8 @@ class CommPost(BlogHandler):
                     existcomment = Comments.by_idcomment(username+idpost).get()
 
                     if existcomment:
-                        error = "You have already commented, Back to blog page!"
+                        error = "You have already commented, "
+                        "Back to blog page!"
                         posts = greetings = Post.all().order('-created')
                         comments = Comments.all()
                         self.render('newcomment.html',
@@ -585,6 +583,7 @@ class CommPost(BlogHandler):
                             error = "No content!"
                             self.render('newcomment.html',
                                         error=error, p=p)
+
 
 class BlogFront(BlogHandler):
 
@@ -606,7 +605,6 @@ class BlogFront(BlogHandler):
         postAuthor = p.author
         commautor = self.request.get('commautor')
 
-
         # Del post
         delete = self.request.get('delete')
         if delete == "delete":
@@ -616,7 +614,10 @@ class BlogFront(BlogHandler):
                 error = "You are not the author, you can't delete the post!"
                 posts = greetings = Post.all().order('-created')
                 comments = Comments.all()
-                self.render('front.html', posts=posts, comments=comments, error=error)
+                self.render('front.html',
+                            posts=posts,
+                            comments=comments,
+                            error=error)
 
         # Del comment
         deletecomment = self.request.get('deletecomment')
@@ -627,7 +628,10 @@ class BlogFront(BlogHandler):
                 error = "You are not the author, you can't delete the comment!"
                 posts = greetings = Post.all().order('-created')
                 comments = Comments.all()
-                self.render('front.html', posts=posts, comments=comments, error=error)
+                self.render('front.html',
+                            posts=posts,
+                            comments=comments,
+                            error=error)
 
         # New comment
         addcomment = self.request.get('addcomment')
@@ -638,7 +642,10 @@ class BlogFront(BlogHandler):
                 error = "You are the author, you can't comment your posts!"
                 posts = greetings = Post.all().order('-created')
                 comments = Comments.all()
-                self.render('front.html', posts=posts, comments=comments, error=error)
+                self.render('front.html',
+                            posts=posts,
+                            comments=comments,
+                            error=error)
 
         # New like
         like = self.request.get('like')
@@ -646,10 +653,14 @@ class BlogFront(BlogHandler):
             if not self.user.name == postAuthor:
                 self.redirect('/blog/addlike/%s' % str(p.key().id()))
             else:
-                error = "You are the author, you can't add a like to your post!"
+                error = "You are the author, you can't add a "
+                "like to your post!"
                 posts = greetings = Post.all().order('-created')
                 comments = Comments.all()
-                self.render('front.html', posts=posts, comments=comments, error=error)
+                self.render('front.html',
+                            posts=posts,
+                            comments=comments,
+                            error=error)
 
         # Edit Post
         edit = self.request.get('edit')
@@ -660,7 +671,10 @@ class BlogFront(BlogHandler):
                 error = "You are not the author, you can't edit other posts!"
                 posts = greetings = Post.all().order('-created')
                 comments = Comments.all()
-                self.render('front.html', posts=posts, comments=comments, error=error)
+                self.render('front.html',
+                            posts=posts,
+                            comments=comments,
+                            error=error)
 
         # Edit comm
         editcomm = self.request.get('editcomm')
@@ -668,10 +682,14 @@ class BlogFront(BlogHandler):
             if self.user.name == commautor:
                 self.redirect('/blog/editComment/%s' % str(p.key().id()))
             else:
-                error = "You are not the author, you can't edit other comments!"
+                error = "You are not the author, you can't edit "
+                "other comments!"
                 posts = greetings = Post.all().order('-created')
                 comments = Comments.all()
-                self.render('front.html', posts=posts, comments=comments, error=error)
+                self.render('front.html',
+                            posts=posts,
+                            comments=comments,
+                            error=error)
 
 
 class PostPage(BlogHandler):
