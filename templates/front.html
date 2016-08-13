@@ -39,10 +39,9 @@
             <p><p>
             <hr>
             <form method="post">
-                    <div>add a comment</div>
-                    <input type="text" name="comment" value="{{comment}}">
                     {% set idp = p.key().id() %}
                     <input type="hidden" name="idp" value="{{idp}}">
+                    <input type="hidden" name="addcomment" value="addcomment">
                     <button type="submit">add comment</button>
             </form>
 

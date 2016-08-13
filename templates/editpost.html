@@ -5,11 +5,11 @@
     <form method="post">
       <label>
         <div>subject</div>
-        <input type="text" name="subject" value="{{subject}}">
+        <input type="text" name="subject" value="{{p.subject}}">
       </label>
       <label>
         <div>blog</div>
-        <textarea name="content">{{content}}</textarea>
+        <textarea name="content">{{p.content}}</textarea>
       </label>
       <div class="error">{{error}}</div>
         {% set idp = p.key().id() %}

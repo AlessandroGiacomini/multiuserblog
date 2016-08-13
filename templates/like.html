@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Like Post</h2>
+  <br>
+      Are you sure you want add a like to this post?
+
+  <form method="post">
+         {% set idp = p.key().id() %}
+        <input type="hidden" name="idp" value="{{idp}}">
+        <input type="hidden" name="likeyes" value="likeyes">
+        <button type="submit">Yes</button>
+
+        <div class="error">{{error}}</div>
+
+  </form>
+
+  <form method="get" action="/blog/">
+    <button type="submit">No, back to blog page</button>
+  </form>
+
+{% endblock %}

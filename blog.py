@@ -220,253 +220,458 @@ class BlogFrontLoggedOut(BlogHandler):
         self.render('login-form.html', error=error)
 
 
-class BlogFront(BlogHandler):
-    def get(self):
-        posts = greetings = Post.all().order('-created')
-        comments = db.GqlQuery('SELECT * FROM Comments ORDER BY created DESC')
-        self.render('front.html', posts=posts, comments=comments)
+class EditComment(BlogHandler):
 
-    def post(self):
+    def get(self, idpost):
+            if self.user:
 
-        if self.user:
-            username = self.user.name
+                key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+                p = db.get(key)
 
-            idpost = self.request.get('idp')
-            key = db.Key.from_path('Post', int(idpost), parent=blog_key())
-            p = db.get(key)
-            comment = self.request.get('comment')
-            deletecomment = self.request.get('deletecomment')
-            commautor = self.request.get('commautor')
-            editcomm = self.request.get('editcomm')
-            textcomm = self.request.get('textcomm')
-            editdone = self.request.get('editdone')
-            checkererror = True
+                if not p:
+                    self.error(404)
+                    return
 
-            if username == p.author:
-                like = self.request.get('like')
-                delete = self.request.get('delete')
-                edit = self.request.get('edit')
+                comments = Comments.all()
+                comment = Comments.by_idcomment(self.user.name+idpost).get()
+                self.render('editcomment.html', p=p, comment=comment)
+            else:
+                self.redirect("/login")
 
-                if delete == "delete":
-                    db.delete(p)
+
+    def post(self, par):
+        if not self.user:
+            self.redirect('/login')
+
+        username = self.user.name
+
+        idpost = self.request.get('idp')
+        key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+        p = db.get(key)
+        commautor = self.request.get('commautor')
+        editcomm = self.request.get('editcomm')
+        comment = self.request.get('comment')
+        textcomm = self.request.get('textcomm')
+
+        editcommentdone = self.request.get('editcommentdone')
+
+        if editcommentdone == "editcommentdone":
+                comments = Comments.all()
+                if comments.get():
+                    comment = Comments.by_idcomment(username+idpost).get()
+                    if comment:
+
+                        if textcomm:
+                            comment.textcomment = textcomm
+                            comment.put()
+                            self.redirect('/blog/?')
+                        else:
+                            error = "Content please!"
+                            self.render("editcomment.html",
+                                        p=p,
+                                        comment=comment,
+                                        content=textcomm,
+                                        error=error)
+
+                    elif not comments:
+                        self.redirect('/blog/?')
+                elif not comments.get():
                     self.redirect('/blog/?')
 
-                if edit == "edit":
-                    sub = p.subject
-                    cont = p.content
-                    pos = p
-                    checkererror = False
-                    self.render("editpost.html",
-                                p=pos, subject=sub,
-                                content=cont)
+class EditPost(BlogHandler):
 
-                if editdone == "editdone":
+    def get(self, idpost):
+            if self.user:
 
-                    subjectchanged = self.request.get('subject')
-                    contentchanged = self.request.get('content')
+                key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+                p = db.get(key)
 
-                    if contentchanged and subjectchanged:
-                        p.subject = self.request.get('subject')
-                        p.content = self.request.get('content')
-                        p.put()
-                        self.redirect('/blog/?')
-                    else:
-                        error = "Subject and content, please"
-                        posts = greetings = Post.all().order('-created')
-                        comments = Comments.all()
-                        self.render("editpost.html",
-                                    p=p,
-                                    subject=subjectchanged,
-                                    content=contentchanged,
-                                    error=error)
-                        checkererror = False
+                if not p:
+                    self.error(404)
+                    return
 
-                if like == "like":
-                    error = "You are the author, you can't vote"
+                self.render('editpost.html', p=p)
+            else:
+                self.redirect("/login")
+
+
+    def post(self, par):
+        if not self.user:
+            self.redirect('/login')
+
+        username = self.user.name
+
+
+        idpost = self.request.get('idp')
+        key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+        p = db.get(key)
+        editdone = self.request.get('editdone')
+
+
+        if username == p.author:
+            edit = self.request.get('edit')
+
+            if edit == "edit":
+                sub = p.subject
+                cont = p.content
+                pos = p
+                self.render("editpost.html",
+                            p=pos, subject=sub,
+                            content=cont)
+
+            if editdone == "editdone":
+
+                subjectchanged = self.request.get('subject')
+                contentchanged = self.request.get('content')
+
+                if contentchanged and subjectchanged:
+                    p.subject = self.request.get('subject')
+                    p.content = self.request.get('content')
+                    p.put()
+                    self.redirect('/blog/?')
+                else:
+                    error = "Subject and content, please"
                     posts = greetings = Post.all().order('-created')
                     comments = Comments.all()
-                    self.render('front.html',
-                                posts=posts,
-                                error=error,
-                                comments=comments)
-                    checkererror = False
+                    self.render("editpost.html",
+                                p=p,
+                                subject=subjectchanged,
+                                content=contentchanged,
+                                error=error)
+
+        else:
+            error = "You are not the author, you can't delete or edit it"
+            posts = greetings = Post.all().order('-created')
+            comments = Comments.all()
+            self.render('front.html',
+                        posts=posts,
+                        error=error,
+                        comments=comments)
+
+
+class DelComment(BlogHandler):
+
+    def get(self, idpost):
+        if self.user:
+
+            key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+            p = db.get(key)
+
+            if not p:
+                self.error(404)
+                return
+
+            self.render('deletecomment.html', p=p)
+        else:
+            self.redirect("/login")
+
+
+
+    def post(self, par):
+        if not self.user:
+            self.redirect('/login')
+
+        username = self.user.name
+
+        idpost = self.request.get('idp')
+        key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+        p = db.get(key)
+
+        comments = Comments.all()
+        comment = Comments.by_idcomment(username+idpost).get()
+        commautor = comment.username
+
+        deletecommentyes = self.request.get('deletecommentyes')
+        if username == commautor:
+            if deletecommentyes == "deletecommentyes":
+                comments = Comments.all()
+
+                if comments.get():
+                    comment = Comments.by_idcomment(username+idpost).get()
+
+                    if comment:
+                        db.delete(comment)
+                        self.redirect('/blog/?')
+
+                    elif not comments:
+                        self.redirect('/blog/?')
+
+                elif not comments.get():
+                        self.redirect('/blog/?')
+
+        else:
+            error = "You are not the author, you can't delete it"
+            posts = greetings = Post.all().order('-created')
+            comments = Comments.all()
+            self.render('front.html',
+                        posts=posts,
+                        error=error,
+                        comments=comments)
+
+
+
+class DelPost(BlogHandler):
+
+    def get(self, idpost):
+        if self.user:
+
+            key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+            p = db.get(key)
+
+            if not p:
+                self.error(404)
+                return
+            self.render('deletepost.html', p=p)
+        else:
+            self.redirect("/login")
+
+
+
+    def post(self, par):
+        if not self.user:
+            self.redirect('/login')
+
+        username = self.user.name
+
+        idpost = self.request.get('idp')
+        key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+        p = db.get(key)
+
+        deleteyes = self.request.get('deleteyes')
+        if deleteyes == "deleteyes":
+            if username == p.author:
+                    db.delete(p)
+                    self.redirect('/blog/')
 
             else:
-                like = self.request.get('like')
-                delete = self.request.get('delete')
-                edit = self.request.get('edit')
-
-                if like == "like":
-                    votes = Votes.all()
-                    if votes.get():
-                        votes = Votes.by_votesid(username+idpost).get()
-
-                        if votes:
-                            if votes.likes == 0:
-                                p.likes += 1
-                                p.put()
-                                self.redirect('/blog/?')
-
-                            else:
-                                error = "You can't put more than 1 like"
-                                posts = Post.all().order('-created')
-                                comments = Comments.all()
-                                self.render('front.html',
-                                            posts=posts,
-                                            error=error,
-                                            comments=comments)
-                                checkererror = False
-
-                        elif not votes:
-                                vote = Votes(username=username, postid=idpost,
-                                             votesid=username+idpost, likes=1)
-                                vote.put()
-                                p.likes += 1
-                                p.put()
-                                self.redirect('/blog/?')
-
-                    elif not votes.get():
-                        vote = Votes(username=username,
-                                     postid=idpost,
-                                     votesid=username+idpost,
-                                     likes=1)
-                        vote.put()
-                        p.likes += 1
-                        p.put()
-                        self.redirect('/blog/?')
-
-                if delete == "delete":
-                    error = "You are not the author, you can't delete it"
-                    posts = greetings = Post.all().order('-created')
-                    comments = Comments.all()
-                    self.render('front.html',
-                                posts=posts,
-                                error=error,
-                                comments=comments)
-                    checkererror = False
-
-                if edit == "edit":
-                    error = "You are not the author, you can't edit it"
-                    posts = greetings = Post.all().order('-created')
-                    comments = Comments.all()
-                    self.render('front.html',
-                                posts=posts,
-                                error=error,
-                                comments=comments)
-                    checkererror = False
-
-            if comment:
-                if p.author == self.user.name:
-                    error = "You are the author, you can't comment it"
-                    posts = greetings = Post.all().order('-created')
-                    comments = Comments.all()
-                    self.render('front.html',
-                                posts=posts,
-                                error=error,
-                                comments=comments)
-                    checkererror = False
-
-                else:
-                    allcomments = Comments.all()
-                    existcomment = Comments.by_idcomment(username+idpost).get()
-
-                    if existcomment:
-                        error = "You have already commented"
-                        posts = greetings = Post.all().order('-created')
-                        comments = Comments.all()
-                        self.render('front.html',
-                                    posts=posts,
-                                    error=error,
-                                    comments=comments)
-                        checkererror = False
-
-                    else:
-                        comments = Comments(username=username,
-                                            idpost=int(idpost),
-                                            idcomment=username+idpost,
-                                            textcomment=comment)
-                        comments.put()
-                        self.redirect('/blog/?')
-
-            if username == commautor:
-                editcommentdone = self.request.get('editcommentdone')
-
-                if deletecomment == "deletecomment":
-                    comments = Comments.all()
-
-                    if comments.get():
-                        comment = Comments.by_idcomment(username+idpost).get()
-
-                        if comment:
-                            db.delete(comment)
-                            self.redirect('/blog/?')
-
-                        elif not comments:
-                            self.redirect('/blog/?')
-
-                    elif not comments.get():
-                        self.redirect('/blog/?')
-
-                if editcomm == "editcomm":
-                    comments = Comments.all()
-
-                    if comments.get():
-                        comment = Comments.by_idcomment(username+idpost).get()
-
-                        if comment:
-                            textcommdamod = comment.textcomment
-                            postcomm = p
-                            self.render("editcomment.html",
-                                        p=postcomm,
-                                        comment=comment,
-                                        textcomm=textcommdamod)
-
-                        elif not comments:
-                            self.redirect('/blog/?')
-
-                    elif not comments.get():
-                        self.redirect('/blog/?')
-
-                if editcommentdone == "editcommentdone":
-                    # self.write(textcomm)
-                    comments = Comments.all()
-
-                    if comments.get():
-                        comment = Comments.by_idcomment(username+idpost).get()
-                        if comment:
-                            # self.write(textcomm)
-
-                            if textcomm:
-                                comment.textcomment = textcomm
-                                comment.put()
-                                self.redirect('/blog/?')
-                            else:
-                                error = "Subject and content, please"
-                                self.render("editcomment.html",
-                                            p=p,
-                                            comment=comment,
-                                            content=textcomm,
-                                            error=error)
-                                checkererror = False
-
-                        elif not comments:
-                            self.redirect('/blog/?')
-                    elif not comments.get():
-                        self.redirect('/blog/?')
-
-            elif(username != commautor and checkererror):
-                error = "You are not the author, you can't delete or edit it"
+                error = "You are not the author, you can't delete it"
                 posts = greetings = Post.all().order('-created')
                 comments = Comments.all()
                 self.render('front.html',
                             posts=posts,
                             error=error,
                             comments=comments)
+
+
+class LikePost(BlogHandler):
+
+    def get(self, idpost):
+        if self.user:
+
+            key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+            p = db.get(key)
+
+            if not p:
+                self.error(404)
+                return
+            self.render('like.html', p=p)
         else:
+            self.redirect("/login")
+
+    def post(self, par):
+        if not self.user:
+            self.redirect('/login')
+
+        username = self.user.name
+
+        idpost = self.request.get('idp')
+        key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+        p = db.get(key)
+
+        likeyes = self.request.get('likeyes')
+
+        if likeyes == "likeyes":
+            if username == p.author:
+                    error = "You are the author, you can't vote, Back to blog page!"
+                    posts = greetings = Post.all().order('-created')
+                    comments = Comments.all()
+                    self.render('like.html',
+                                error=error, p=p)
+            else:
+                votes = Votes.all()
+                if votes.get():
+                    votes = Votes.by_votesid(username+idpost).get()
+
+                    if votes:
+                        if votes.likes == 0:
+                            p.likes += 1
+                            p.put()
+                            self.redirect('/blog/?')
+
+                        else:
+                            error = "You can't put more than 1 like, Back to blog page!"
+                            posts = Post.all().order('-created')
+                            comments = Comments.all()
+                            self.render('like.html', error=error, p=p)
+
+                    elif not votes:
+                            vote = Votes(username=username, postid=idpost,
+                                             votesid=username+idpost, likes=1)
+                            vote.put()
+                            p.likes += 1
+                            p.put()
+                            self.redirect('/blog/?')
+
+                elif not votes.get():
+                    vote = Votes(username=username,
+                                 postid=idpost,
+                                 votesid=username+idpost,
+                                 likes=1)
+                    vote.put()
+                    p.likes += 1
+                    p.put()
+                    self.redirect('/blog/?')
+
+
+class CommPost(BlogHandler):
+
+    def get(self, idpost):
+
+        if self.user:
+
+            key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+            p = db.get(key)
+
+            if not p:
+                self.error(404)
+                return
+
+            self.render("newcomment.html", p=p)
+
+        else:
+            self.redirect("/login")
+
+    def post(self, par):
+        if not self.user:
+            self.redirect('/login')
+
+        username = self.user.name
+
+        idpost = self.request.get('idp')
+        key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+        p = db.get(key)
+        newcommentdone = self.request.get('newcommentdone')
+
+        if newcommentdone == "newcommentdone":
+
+                if p.author == self.user.name:
+                    error = "You are the author, you can't comment it, Back to blog page!"
+                    posts = greetings = Post.all().order('-created')
+                    comments = Comments.all()
+                    self.render('newcomment.html',
+                                error=error, p=p)
+
+                else:
+                    allcomments = Comments.all()
+                    existcomment = Comments.by_idcomment(username+idpost).get()
+
+                    if existcomment:
+                        error = "You have already commented, Back to blog page!"
+                        posts = greetings = Post.all().order('-created')
+                        comments = Comments.all()
+                        self.render('newcomment.html',
+                                    error=error, p=p)
+                    else:
+                        textcomm = self.request.get("textcomm")
+
+                        if textcomm:
+                            comments = Comments(username=username,
+                                                idpost=int(idpost),
+                                                idcomment=username+idpost,
+                                                textcomment=textcomm)
+                            comments.put()
+                            self.redirect('/blog/?')
+                        else:
+                            error = "No content!"
+                            self.render('newcomment.html',
+                                        error=error, p=p)
+
+class BlogFront(BlogHandler):
+
+    def get(self):
+        posts = greetings = Post.all().order('-created')
+        comments = db.GqlQuery('SELECT * FROM Comments ORDER BY created DESC')
+        self.render('front.html', posts=posts, comments=comments)
+
+    def post(self):
+        if not self.user:
             error = "You are not logged"
             posts = greetings = Post.all().order('-created')
             comments = Comments.all()
             self.render('login-form.html', error=error)
+
+        idpost = self.request.get('idp')
+        key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+        p = db.get(key)
+        postAuthor = p.author
+        commautor = self.request.get('commautor')
+
+
+        # Del post
+        delete = self.request.get('delete')
+        if delete == "delete":
+            if self.user.name == postAuthor:
+                self.redirect('/blog/delpost/%s' % str(p.key().id()))
+            else:
+                error = "You are not the author, you can't delete the post!"
+                posts = greetings = Post.all().order('-created')
+                comments = Comments.all()
+                self.render('front.html', posts=posts, comments=comments, error=error)
+
+        # Del comment
+        deletecomment = self.request.get('deletecomment')
+        if deletecomment == "deletecomment":
+            if self.user.name == commautor:
+                self.redirect('/blog/delcomment/%s' % str(p.key().id()))
+            else:
+                error = "You are not the author, you can't delete the comment!"
+                posts = greetings = Post.all().order('-created')
+                comments = Comments.all()
+                self.render('front.html', posts=posts, comments=comments, error=error)
+
+        # New comment
+        addcomment = self.request.get('addcomment')
+        if addcomment == "addcomment":
+            if not self.user.name == postAuthor:
+                self.redirect('/blog/commpost/%s' % str(p.key().id()))
+            else:
+                error = "You are the author, you can't comment your posts!"
+                posts = greetings = Post.all().order('-created')
+                comments = Comments.all()
+                self.render('front.html', posts=posts, comments=comments, error=error)
+
+        # New like
+        like = self.request.get('like')
+        if like == "like":
+            if not self.user.name == postAuthor:
+                self.redirect('/blog/addlike/%s' % str(p.key().id()))
+            else:
+                error = "You are the author, you can't add a like to your post!"
+                posts = greetings = Post.all().order('-created')
+                comments = Comments.all()
+                self.render('front.html', posts=posts, comments=comments, error=error)
+
+        # Edit Post
+        edit = self.request.get('edit')
+        if edit == "edit":
+            if self.user.name == postAuthor:
+                self.redirect('/blog/editPost/%s' % str(p.key().id()))
+            else:
+                error = "You are not the author, you can't edit other posts!"
+                posts = greetings = Post.all().order('-created')
+                comments = Comments.all()
+                self.render('front.html', posts=posts, comments=comments, error=error)
+
+        # Edit comm
+        editcomm = self.request.get('editcomm')
+        if editcomm == "editcomm":
+            if self.user.name == commautor:
+                self.redirect('/blog/editComment/%s' % str(p.key().id()))
+            else:
+                error = "You are not the author, you can't edit other comments!"
+                posts = greetings = Post.all().order('-created')
+                comments = Comments.all()
+                self.render('front.html', posts=posts, comments=comments, error=error)
 
 
 class PostPage(BlogHandler):
@@ -492,22 +697,6 @@ class Votes(db.Model):
     def by_votesid(cls, votesid):
         v = db.GqlQuery('SELECT * FROM Votes WHERE votesid = :1', votesid)
         return v
-
-
-class EditPost(BlogHandler):
-    def get(self):
-        if self.user:
-            self.render("editpost.html")
-        else:
-            self.redirect("/login")
-
-
-class EditComment(BlogHandler):
-    def get(self):
-        if self.user:
-            self.render("editcomment.html")
-        else:
-            self.redirect("/login")
 
 
 class NewPost(BlogHandler):
@@ -704,6 +893,12 @@ class Welcome(BlogHandler):
 #######################################################
 
 app = webapp2.WSGIApplication([('/', MainPage),
+                               ('/blog/editComment/([0-9]+)', EditComment),
+                               ('/blog/editPost/([0-9]+)', EditPost),
+                               ('/blog/delcomment/([0-9]+)', DelComment),
+                               ('/blog/delpost/([0-9]+)', DelPost),
+                               ('/blog/addlike/([0-9]+)', LikePost),
+                               ('/blog/commpost/([0-9]+)', CommPost),
                                ('/unit2/signup', Unit2Signup),
                                ('/unit2/welcome', Welcome),
                                ('/blog/?', BlogFront),

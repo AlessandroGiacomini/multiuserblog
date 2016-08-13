@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Delete Post</h2>
+  <br>
+      Are you sure you want to delete this post?
+
+  <form method="post">
+         {% set idp = p.key().id() %}
+        <input type="hidden" name="idp" value="{{idp}}">
+        <input type="hidden" name="deleteyes" value="deleteyes">
+        <button type="submit">Yes</button>
+  </form>
+
+  <form method="get" action="/blog/">
+    <button type="submit">No, back to blog page</button>
+  </form>
+
+{% endblock %}
