@@ -5,118 +5,13 @@ import hashlib
 import hmac
 import webapp2
 import jinja2
+import models
 from string import letters
 from google.appengine.ext import db
-
-# template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader('templates'),
-                               autoescape=True)
-
-SECRET = '2144389555834132121234355589814413'
-
-#######################################################
-# Account and security users
-#######################################################
-# sha256
-
-
-# Make a string of 5 letters, the salt
-def make_salt(length=5):
-    return ''.join(random.choice(letters) for x in xrange(length))
-
-
-# Make a password hash
-def make_pw_hash(name, pw, salt=None):
-    if not salt:
-        salt = make_salt()
-    h = hashlib.sha256(name + pw + salt).hexdigest()
-    return '%s,%s' % (salt, h)
-
-
-# Make sure that the hash from the database matches
-# the new hash created based on what the user entered in
-def valid_pw(name, password, h):
-    salt = h.split(',')[0]
-    return h == make_pw_hash(name, password, salt)
-
-
-# An element in the database to store all of our element
-def users_key(group='default'):
-    return db.Key.from_path('users', group)
-
-
-#######################################################
-# hmac
-def hash_str(s):
-    return hmac.new(SECRET, s).hexdigest()
-
-#######################################################
-# md5
-# def hash_str(s):
-# return hashlib.md5(s).hexdigest()
-
-
-# Take a val and return that value, a pipe and the hmac of the val
-def make_secure_val(val):
-    return '%s|%s' % (val, hash_str(val))
-
-
-# Take a secure val and check if it is valid
-def check_secure_val(secure_val):
-    val = secure_val.split('|')[0]
-    if secure_val == make_secure_val(val):
-        return val
-
-#######################################################
-# Class User
-# The user object that will be stored in the database
-# db.Model makes it a data store object
-#######################################################
-
-
-class User(db.Model):
-    name = db.StringProperty(required=True)
-    # We DON'T store password in the database,
-    # we store hash of the password
-    pw_hash = db.StringProperty(required=True)
-    # The email is not required
-    email = db.StringProperty()
-
-    # we load the user on to the databse
-    @classmethod
-    def by_id(cls, uid):
-        return User.get_by_id(uid, parent=users_key())
-
-    # Looks up a user by its name
-    @classmethod
-    def by_name(cls, name):
-        u = User.all().filter('name =', name).get()
-        return u
-
-    # register creates a new user object
-    @classmethod
-    def register(cls, name, pw, email=None):
-        pw_hash = make_pw_hash(name, pw)
-        return User(parent=users_key(),
-                    name=name,
-                    pw_hash=pw_hash,
-                    email=email)
-
-    # login
-    @classmethod
-    def login(cls, name, pw):
-        u = cls.by_name(name)
-        if u and valid_pw(name, pw, u.pw_hash):
-            return u
 
 #######################################################
 # BlogHandler: parent class for all handlers
 #######################################################
-
-
-def render_str(template, **params):
-    t = jinja_env.get_template(template)
-    return t.render(params)
 
 
 class BlogHandler(webapp2.RequestHandler):
@@ -176,37 +71,6 @@ def blog_key(name='default'):
     return db.Key.from_path('blogs', name)
 
 
-class Post(db.Model):
-    subject = db.StringProperty(required=True)
-    content = db.TextProperty(required=True)
-    created = db.DateTimeProperty(auto_now_add=True)
-    likes = db.IntegerProperty(default=0)
-    last_modified = db.DateTimeProperty(auto_now=True)
-    author = db.StringProperty()
-
-    def render(self):
-        self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p=self)
-
-    @classmethod
-    def post_by_id(cls, uid):
-        return Post.get_by_id(uid, parent=blog_key())
-
-
-class Comments(db.Model):
-    username = db.StringProperty()
-    idpost = db.IntegerProperty()
-    idcomment = db.StringProperty()
-    textcomment = db.TextProperty()
-    created = db.DateTimeProperty(auto_now_add=True)
-
-    @classmethod
-    def by_idcomment(cls, idcomment):
-        c = db.GqlQuery('SELECT * FROM Comments WHERE idcomment = :1',
-                        idcomment)
-        return c
-
-
 class BlogFrontLoggedOut(BlogHandler):
     def get(self):
         posts = greetings = Post.all().order('-created')
@@ -234,13 +98,31 @@ class EditComment(BlogHandler):
 
                 comments = Comments.all()
                 comment = Comments.by_idcomment(self.user.name+idpost).get()
-                self.render('editcomment.html', p=p, comment=comment)
+                if comment:
+                    username = self.user.name
+                    commautor = comment.username
+                    if username == commautor:
+                        self.render('editcomment.html', p=p, comment=comment)
+                    else:
+                        error = "You are not the author"
+                        comments = Comments.all()
+                        self.render('editcomment.html',
+                                    p=p,
+                                    error=error,
+                                    comment=comment)
+                else:
+                    error = "You are not the author"
+                    comments = Comments.all()
+                    self.render('editcomment.html',
+                                p=p,
+                                error=error,
+                                comment=comment)
             else:
                 self.redirect("/login")
 
     def post(self, par):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         username = self.user.name
 
@@ -252,30 +134,41 @@ class EditComment(BlogHandler):
         comment = self.request.get('comment')
         textcomm = self.request.get('textcomm')
 
-        editcommentdone = self.request.get('editcommentdone')
+        if username == commautor:
 
-        if editcommentdone == "editcommentdone":
-                comments = Comments.all()
-                if comments.get():
-                    comment = Comments.by_idcomment(username+idpost).get()
-                    if comment:
+            editcommentdone = self.request.get('editcommentdone')
 
-                        if textcomm:
-                            comment.textcomment = textcomm
-                            comment.put()
+            if editcommentdone == "editcommentdone":
+                    comments = Comments.all()
+                    if comments.get():
+                        comment = Comments.by_idcomment(username+idpost).get()
+                        if comment:
+
+                            if textcomm:
+                                comment.textcomment = textcomm
+                                comment.put()
+                                self.redirect('/blog/?')
+                            else:
+                                error = "Content please!"
+                                self.render("editcomment.html",
+                                            p=p,
+                                            comment=comment,
+                                            content=textcomm,
+                                            error=error)
+
+                        elif not comments:
                             self.redirect('/blog/?')
-                        else:
-                            error = "Content please!"
-                            self.render("editcomment.html",
-                                        p=p,
-                                        comment=comment,
-                                        content=textcomm,
-                                        error=error)
-
-                    elif not comments:
+                    elif not comments.get():
                         self.redirect('/blog/?')
-                elif not comments.get():
-                    self.redirect('/blog/?')
+
+        else:
+            error = "You are not the author, you can't edit other comments"
+            posts = greetings = Post.all().order('-created')
+            comments = Comments.all()
+            self.render('front.html',
+                        posts=posts,
+                        error=error,
+                        comments=comments)
 
 
 class EditPost(BlogHandler):
@@ -290,13 +183,20 @@ class EditPost(BlogHandler):
                     self.error(404)
                     return
 
-                self.render('editpost.html', p=p)
+                username = self.user.name
+                if username == p.author:
+                    self.render('editpost.html', p=p)
+                else:
+                    error = "You are not the author"
+                    self.render('editpost.html',
+                                p=p,
+                                error=error)
             else:
                 self.redirect("/login")
 
     def post(self, par):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         username = self.user.name
 
@@ -358,13 +258,31 @@ class DelComment(BlogHandler):
                 self.error(404)
                 return
 
-            self.render('deletecomment.html', p=p)
+            username = self.user.name
+            comments = Comments.all()
+            comment = Comments.by_idcomment(username+idpost).get()
+
+            if comment:
+                commautor = comment.username
+                if username == commautor:
+                    self.render('deletecomment.html', p=p)
+
+                else:
+                    error = "You are not the author"
+                    self.render('deletecomment.html',
+                                p=p,
+                                error=error)
+            else:
+                error = "You are not the author, you can't edit other posts"
+                self.render('deletecomment.html',
+                            p=p,
+                            error=error)
         else:
             self.redirect("/login")
 
     def post(self, par):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         username = self.user.name
 
@@ -374,34 +292,37 @@ class DelComment(BlogHandler):
 
         comments = Comments.all()
         comment = Comments.by_idcomment(username+idpost).get()
-        commautor = comment.username
 
-        deletecommentyes = self.request.get('deletecommentyes')
-        if username == commautor:
-            if deletecommentyes == "deletecommentyes":
-                comments = Comments.all()
+        if comment:
+            commautor = comment.username
 
-                if comments.get():
-                    comment = Comments.by_idcomment(username+idpost).get()
+            deletecommentyes = self.request.get('deletecommentyes')
+            if username == commautor:
 
-                    if comment:
-                        db.delete(comment)
-                        self.redirect('/blog/?')
+                if deletecommentyes == "deletecommentyes":
+                    comments = Comments.all()
 
-                    elif not comments:
-                        self.redirect('/blog/?')
+                    if comments.get():
+                        comment = Comments.by_idcomment(username+idpost).get()
 
-                elif not comments.get():
-                        self.redirect('/blog/?')
+                        if comment:
+                            db.delete(comment)
+                            self.redirect('/blog/?')
+
+                        elif not comments:
+                            self.redirect('/blog/?')
+
+                    elif not comments.get():
+                            self.redirect('/blog/?')
 
         else:
             error = "You are not the author, you can't delete it"
             posts = greetings = Post.all().order('-created')
             comments = Comments.all()
-            self.render('front.html',
-                        posts=posts,
-                        error=error,
-                        comments=comments)
+            return self.render('front.html',
+                               posts=posts,
+                               error=error,
+                               comments=comments)
 
 
 class DelPost(BlogHandler):
@@ -415,16 +336,23 @@ class DelPost(BlogHandler):
             if not p:
                 self.error(404)
                 return
-            self.render('deletepost.html', p=p)
+
+            username = self.user.name
+            if username == p.author:
+                self.render('deletepost.html', p=p)
+            else:
+                error = "You are not the author, you can't delete other posts"
+                self.render('deletepost.html',
+                            p=p,
+                            error=error)
         else:
             self.redirect("/login")
 
     def post(self, par):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         username = self.user.name
-
         idpost = self.request.get('idp')
         key = db.Key.from_path('Post', int(idpost), parent=blog_key())
         p = db.get(key)
@@ -456,13 +384,22 @@ class LikePost(BlogHandler):
             if not p:
                 self.error(404)
                 return
-            self.render('like.html', p=p)
+
+            username = self.user.name
+            if not username == p.author:
+                self.render('like.html', p=p)
+            else:
+                error = "You are not the author, you can't delete other posts"
+                self.render('like.html',
+                            p=p,
+                            error=error)
+
         else:
             self.redirect("/login")
 
     def post(self, par):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         username = self.user.name
 
@@ -475,11 +412,12 @@ class LikePost(BlogHandler):
         if likeyes == "likeyes":
             if username == p.author:
                     error = "You are the author, you can't vote, "
-                    "Back to blog page!"
                     posts = greetings = Post.all().order('-created')
                     comments = Comments.all()
-                    self.render('like.html',
-                                error=error, p=p)
+                    self.render('front.html',
+                                posts=posts,
+                                error=error,
+                                comments=comments)
             else:
                 votes = Votes.all()
                 if votes.get():
@@ -532,14 +470,21 @@ class CommPost(BlogHandler):
                 self.error(404)
                 return
 
-            self.render("newcomment.html", p=p)
+            username = self.user.name
+            if not username == p.author:
+                self.render("newcomment.html", p=p)
+            else:
+                error = "You are the author, you can't comment it"
+                self.render('newcomment.html',
+                            p=p,
+                            error=error)
 
         else:
             self.redirect("/login")
 
     def post(self, par):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         username = self.user.name
 
@@ -551,12 +496,13 @@ class CommPost(BlogHandler):
         if newcommentdone == "newcommentdone":
 
                 if p.author == self.user.name:
-                    error = "You are the author, you can't comment it, "
-                    "Back to blog page!"
+                    error = "You are the author, you can't comment it"
                     posts = greetings = Post.all().order('-created')
                     comments = Comments.all()
-                    self.render('newcomment.html',
-                                error=error, p=p)
+                    self.render('front.html',
+                                posts=posts,
+                                error=error,
+                                comments=comments)
 
                 else:
                     allcomments = Comments.all()
@@ -578,7 +524,7 @@ class CommPost(BlogHandler):
                                                 idcomment=username+idpost,
                                                 textcomment=textcomm)
                             comments.put()
-                            self.redirect('/blog/?')
+                            self.redirect('/blog/')
                         else:
                             error = "No content!"
                             self.render('newcomment.html',
@@ -593,103 +539,49 @@ class BlogFront(BlogHandler):
         self.render('front.html', posts=posts, comments=comments)
 
     def post(self):
-        if not self.user:
+        if self.user:
+
+            idpost = self.request.get('idp')
+            key = db.Key.from_path('Post', int(idpost), parent=blog_key())
+            p = db.get(key)
+            postAuthor = p.author
+            commautor = self.request.get('commautor')
+
+            # Del post
+            delete = self.request.get('delete')
+            if delete == "delete":
+                self.redirect('/blog/delpost/%s' % str(p.key().id()))
+
+            # Del comment
+            deletecomment = self.request.get('deletecomment')
+            if deletecomment == "deletecomment":
+                self.redirect('/blog/delcomment/%s' % str(p.key().id()))
+
+            # New comment
+            addcomment = self.request.get('addcomment')
+            if addcomment == "addcomment":
+                self.redirect('/blog/commpost/%s' % str(p.key().id()))
+
+            # New like
+            like = self.request.get('like')
+            if like == "like":
+                self.redirect('/blog/addlike/%s' % str(p.key().id()))
+
+            # Edit Post
+            edit = self.request.get('edit')
+            if edit == "edit":
+                self.redirect('/blog/editPost/%s' % str(p.key().id()))
+
+            # Edit comm
+            editcomm = self.request.get('editcomm')
+            if editcomm == "editcomm":
+                self.redirect('/blog/editComment/%s' % str(p.key().id()))
+
+        else:
             error = "You are not logged"
             posts = greetings = Post.all().order('-created')
             comments = Comments.all()
             self.render('login-form.html', error=error)
-
-        idpost = self.request.get('idp')
-        key = db.Key.from_path('Post', int(idpost), parent=blog_key())
-        p = db.get(key)
-        postAuthor = p.author
-        commautor = self.request.get('commautor')
-
-        # Del post
-        delete = self.request.get('delete')
-        if delete == "delete":
-            if self.user.name == postAuthor:
-                self.redirect('/blog/delpost/%s' % str(p.key().id()))
-            else:
-                error = "You are not the author, you can't delete the post!"
-                posts = greetings = Post.all().order('-created')
-                comments = Comments.all()
-                self.render('front.html',
-                            posts=posts,
-                            comments=comments,
-                            error=error)
-
-        # Del comment
-        deletecomment = self.request.get('deletecomment')
-        if deletecomment == "deletecomment":
-            if self.user.name == commautor:
-                self.redirect('/blog/delcomment/%s' % str(p.key().id()))
-            else:
-                error = "You are not the author, you can't delete the comment!"
-                posts = greetings = Post.all().order('-created')
-                comments = Comments.all()
-                self.render('front.html',
-                            posts=posts,
-                            comments=comments,
-                            error=error)
-
-        # New comment
-        addcomment = self.request.get('addcomment')
-        if addcomment == "addcomment":
-            if not self.user.name == postAuthor:
-                self.redirect('/blog/commpost/%s' % str(p.key().id()))
-            else:
-                error = "You are the author, you can't comment your posts!"
-                posts = greetings = Post.all().order('-created')
-                comments = Comments.all()
-                self.render('front.html',
-                            posts=posts,
-                            comments=comments,
-                            error=error)
-
-        # New like
-        like = self.request.get('like')
-        if like == "like":
-            if not self.user.name == postAuthor:
-                self.redirect('/blog/addlike/%s' % str(p.key().id()))
-            else:
-                error = "You are the author, you can't add a "
-                "like to your post!"
-                posts = greetings = Post.all().order('-created')
-                comments = Comments.all()
-                self.render('front.html',
-                            posts=posts,
-                            comments=comments,
-                            error=error)
-
-        # Edit Post
-        edit = self.request.get('edit')
-        if edit == "edit":
-            if self.user.name == postAuthor:
-                self.redirect('/blog/editPost/%s' % str(p.key().id()))
-            else:
-                error = "You are not the author, you can't edit other posts!"
-                posts = greetings = Post.all().order('-created')
-                comments = Comments.all()
-                self.render('front.html',
-                            posts=posts,
-                            comments=comments,
-                            error=error)
-
-        # Edit comm
-        editcomm = self.request.get('editcomm')
-        if editcomm == "editcomm":
-            if self.user.name == commautor:
-                self.redirect('/blog/editComment/%s' % str(p.key().id()))
-            else:
-                error = "You are not the author, you can't edit "
-                "other comments!"
-                posts = greetings = Post.all().order('-created')
-                comments = Comments.all()
-                self.render('front.html',
-                            posts=posts,
-                            comments=comments,
-                            error=error)
 
 
 class PostPage(BlogHandler):
@@ -703,18 +595,6 @@ class PostPage(BlogHandler):
             return
 
         self.render("permalink.html", post=post)
-
-
-class Votes(db.Model):
-    username = db.StringProperty()
-    postid = db.StringProperty()
-    votesid = db.StringProperty()
-    likes = db.IntegerProperty(default=0)
-
-    @classmethod
-    def by_votesid(cls, votesid):
-        v = db.GqlQuery('SELECT * FROM Votes WHERE votesid = :1', votesid)
-        return v
 
 
 class NewPost(BlogHandler):
