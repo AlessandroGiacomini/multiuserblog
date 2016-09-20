@@ -7,7 +7,6 @@ Users should be able to create an account with login/logout functionality, and c
 
 ## How to Run Project
 ------------------
-Checkout the [live](http://multiuserblogalessandro.appspot.com/) version of this project.
 
 * Install the [Google App Engine SDK for Python](https://cloud.google.com/appengine/downloads)
 * Sign up for a GAE account ([instructions](https://sites.google.com/site/gdevelopercodelabs/app-engine/creating-your-app-engine-account))
